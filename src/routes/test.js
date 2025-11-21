@@ -32,7 +32,7 @@ router.get('/users', (req, res) => {
 router.get('/users/:userId/todos', (req, res) => {
     const userId = req.params.userId;
     const userQuery = 'SELECT user_name FROM users WHERE user_id = ?';
-    const todosQuery = 'SELECT * FROM todos WHERE user_id = ? ORDER BY created_at DESC';
+    const todosQuery = 'SELECT * FROM todos, users where todos.user_id = users.user_id ORDER BY todo_id DESC';
 
     db.query(userQuery, [userId], (err, userResult) => {
         if (err) throw err;
@@ -93,31 +93,6 @@ router.get('/users/:userId/todos-page', (req, res) => {
     });
 });
 
-// Show form to insert a new todo
-router.get('/todoInsertView', (req, res) => {
-    const query = 'SELECT * FROM users';
-    db.query(query, (err, users) => {
-        if (err) throw err;
-        res.render('test/todoInsertView', {
-            title: 'Insert New Todo',
-            user: req.session.user,
-            users: users
-        });
-    });
-});
-
-// Handle form submission for inserting a new todo
-router.post('/todoInsertPost', (req, res) => {
-    const { user_id, title } = req.body;
-    const is_completed = req.body.is_completed ? 1 : 0;
-    
-    const query = 'INSERT INTO todos (user_id, title, is_completed) VALUES (?, ?, ?)';
-    db.query(query, [user_id, title, is_completed], (err, result) => {
-        if (err) throw err;
-        res.redirect(`/test/users/${user_id}/todos`);
-    });
-});
-
 // Show form to modify a todo
 router.get('/todoModifyView/:todoId', (req, res) => {
     const { todoId } = req.params;
@@ -155,6 +130,31 @@ router.post('/todoDeletePost/:todoId', (req, res) => {
     
     const query = 'DELETE FROM todos WHERE todo_id = ?';
     db.query(query, [todoId], (err, result) => {
+        if (err) throw err;
+        res.redirect(`/test/users/${user_id}/todos`);
+    });
+});
+
+// Show form to insert a new todo
+router.get('/todoInsertView', (req, res) => {
+    const query = 'SELECT * FROM users';
+    db.query(query, (err, users) => {
+        if (err) throw err;
+        res.render('test/todoInsertView', {
+            title: 'Insert New Todo',
+            user: req.session.user,
+            users: users
+        });
+    });
+});
+
+// Handle form submission for inserting a new todo
+router.post('/todoInsertPost', (req, res) => {
+    const { user_id, title } = req.body;
+    const is_completed = req.body.is_completed ? 1 : 0;
+    
+    const query = 'INSERT INTO todos (user_id, title, is_completed) VALUES (?, ?, ?)';
+    db.query(query, [user_id, title, is_completed], (err, result) => {
         if (err) throw err;
         res.redirect(`/test/users/${user_id}/todos`);
     });
